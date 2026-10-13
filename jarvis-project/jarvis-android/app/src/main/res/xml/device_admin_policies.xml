@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Only force-lock is declared. We deliberately do not request
+     wipe-data, password-reset, or any other device-admin policy — this
+     app's only legitimate use of device admin is letting the owner say
+     "lock my phone" and have it happen. -->
+<device-admin xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-policies>
+        <force-lock />
+    </uses-policies>
+</device-admin>

@@ -1,0 +1,243 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mose AI Assistant</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0b0f19; color: #f1f5f9; display: flex; height: 100vh; margin: 0; overflow: hidden; }
+        
+        .sidebar { width: 300px; background: #111827; border-right: 1px solid #1f2937; display: flex; flex-direction: column; padding: 20px; gap: 20px; justify-content: space-between; }
+        .sidebar h2 { font-size: 18px; color: #fff; margin-top: 0; }
+        
+        .apk-banner { background: linear-gradient(135deg, #3b82f6, #1d4ed8); padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
+        .apk-banner h3 { margin: 0 0 8px 0; font-size: 16px; }
+        .apk-btn { background: #ffffff; color: #1d4ed8; border: none; padding: 8px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-block; font-size: 13px; }
+        .apk-btn:hover { background: #f8fafc; }
+
+        .main-chat { flex: 1; display: flex; flex-direction: column; background: #0b0f19; padding: 20px; justify-content: space-between; }
+        
+        .chat-box { flex: 1; overflow-y: auto; background: #111827; border-radius: 12px; padding: 20px; border: 1px solid #1f2937; display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
+        .message { padding: 12px 16px; border-radius: 8px; max-width: 75%; line-height: 1.5; }
+        .user-msg { background: #2563eb; align-self: flex-end; }
+        .ai-msg { background: #1f2937; align-self: flex-start; }
+
+        .input-wrapper { position: relative; }
+        .input-bar { display: flex; align-items: center; background: #171c28; border-radius: 32px; padding: 10px 16px; border: 1px solid #2d3748; gap: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+        
+        .plus-btn { background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; transition: background 0.2s; }
+        .plus-btn:hover { background: #2d3748; }
+
+        input[type="text"] { flex: 1; background: none; border: none; color: #fff; font-size: 16px; outline: none; }
+        input[type="text"]::placeholder { color: #718096; }
+
+        .icon-action-btn { background: none; border: none; color: #cbd5e1; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; transition: all 0.2s; }
+        .icon-action-btn:hover { background: #2d3748; }
+        .icon-action-btn.active-mic { color: #ffffff; background: #dc2626; box-shadow: 0 0 10px rgba(220, 38, 38, 0.6); animation: pulse 1.5s infinite; }
+
+        .voice-mode-btn { background: #2563eb; border: none; color: #fff; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(37,99,235,0.4); }
+        .voice-mode-btn:hover { background: #1d4ed8; }
+        .voice-mode-btn.active { background: #dc2626; }
+
+        .popup-menu { display: none; position: absolute; bottom: 75px; left: 0; background: #1a202c; border: 1px solid #2d3748; border-radius: 20px; width: 220px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); padding: 8px 0; z-index: 100; flex-direction: column; }
+        .popup-menu.active { display: flex; }
+        .popup-item { display: flex; align-items: center; gap: 14px; padding: 12px 20px; color: #e2e8f0; background: none; border: none; width: 100%; text-align: left; font-size: 15px; cursor: pointer; }
+        .popup-item:hover { background: #2d3748; }
+
+        input[type="file"] { display: none; }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div>
+            <h2>Mose AI Dashboard</h2>
+            <p style="font-size: 13px; color: #9ca3af; line-height: 1.4;">Welcome to your central hub. Control your devices and access your personal assistant workspace.</p>
+        </div>
+        <div class="apk-banner">
+            <h3>Get Mose AI on Android</h3>
+            <p style="font-size: 12px; margin: 0 0 10px 0; color: #e0e7ff;">Install the APK to give Mose AI device control permissions.</p>
+            <a href="#" class="apk-btn" onclick="alert('Place your compiled jarvis-android.apk inside the public folder to enable direct downloading!')">Download APK</a>
+        </div>
+    </div>
+
+    <div class="main-chat">
+        <!-- Chat box is now completely clean and empty on load -->
+        <div id="chatBox" class="chat-box"></div>
+
+        <div class="input-wrapper">
+            <div id="popupMenu" class="popup-menu">
+                <button class="popup-item" onclick="triggerCameraCapture()">📷 Camera</button>
+                <button class="popup-item" onclick="document.getElementById('photoInput').click()">🖼️ Photos</button>
+                <button class="popup-item" onclick="document.getElementById('fileInput').click()">📁 Files</button>
+                <button class="popup-item" onclick="promptPlugin()">🔌 Plugins</button>
+                <button class="popup-item" onclick="setThinkHarder()">⚡ Think harder</button>
+            </div>
+
+            <div class="input-bar">
+                <button class="plus-btn" onclick="togglePopup(event)">+</button>
+                <input type="text" id="userInput" placeholder="Message Mose AI..." onkeydown="if(event.key==='Enter') sendMessage()">
+                <button id="micBtn" class="icon-action-btn" onclick="toggleVoiceInput()" title="Microphone">🎙️</button>
+                <button id="voiceModeBtn" class="voice-mode-btn" onclick="toggleVoiceMode()" title="Voice Output Mode">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="2" y="9" width="3" height="6" rx="1.5"/>
+                        <rect x="7" y="5" width="3" height="14" rx="1.5"/>
+                        <rect x="12" y="2" width="3" height="20" rx="1.5"/>
+                        <rect x="17" y="7" width="3" height="10" rx="1.5"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="photoInput" accept="image/*" onchange="handleMediaUpload('Photo')">
+    <input type="file" id="fileInput" onchange="handleMediaUpload('File')">
+
+    <script>
+        let isListening = false;
+        let isVoiceOutputEnabled = false;
+        let thinkHarderMode = false;
+
+        function togglePopup(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('popupMenu');
+            menu.classList.toggle('active');
+        }
+
+        window.addEventListener('click', () => {
+            document.getElementById('popupMenu').classList.remove('active');
+        });
+
+        function triggerCameraCapture() {
+            document.getElementById('photoInput').click();
+        }
+
+        function handleMediaUpload(type) {
+            const input = type === 'Photo' ? document.getElementById('photoInput') : document.getElementById('fileInput');
+            if (input.files.length > 0) {
+                document.getElementById('chatBox').innerHTML += `<div class="message user-msg">[Uploaded ${type}: ${input.files[0].name}]</div>`;
+            }
+        }
+
+        function promptPlugin() {
+            const pluginName = prompt("Enter plugin name or integration request:");
+            if(pluginName) {
+                document.getElementById('userInput').value = `Use plugin: ${pluginName}`;
+            }
+        }
+
+        function setThinkHarder() {
+            thinkHarderMode = !thinkHarderMode;
+            alert(thinkHarderMode ? "⚡ Think Harder mode activated!" : "Think Harder mode deactivated.");
+        }
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                isListening = true;
+                document.getElementById('micBtn').classList.add('active-mic');
+                document.getElementById('userInput').placeholder = "Listening...";
+            };
+
+            recognition.onresult = (event) => {
+                const speechText = event.results[0][0].transcript;
+                document.getElementById('userInput').value = speechText;
+                sendMessage();
+            };
+
+            recognition.onerror = () => {
+                stopMicState();
+            };
+
+            recognition.onend = () => {
+                stopMicState();
+            };
+        }
+
+        function toggleVoiceInput() {
+            if (!recognition) {
+                alert("Speech recognition is not supported in this browser.");
+                return;
+            }
+
+            if (isListening) {
+                recognition.stop();
+                stopMicState();
+            } else {
+                try {
+                    recognition.start();
+                } catch (e) {
+                    recognition.stop();
+                    recognition.start();
+                }
+            }
+        }
+
+        function stopMicState() {
+            isListening = false;
+            document.getElementById('micBtn').classList.remove('active-mic');
+            document.getElementById('userInput').placeholder = "Message Mose AI...";
+        }
+
+        function toggleVoiceMode() {
+            isVoiceOutputEnabled = !isVoiceOutputEnabled;
+            const btn = document.getElementById('voiceModeBtn');
+            if (isVoiceOutputEnabled) {
+                btn.classList.add('active');
+                alert("Voice output enabled: Mose AI will speak responses aloud.");
+            } else {
+                btn.classList.remove('active');
+                window.speechSynthesis.cancel();
+                alert("Voice output disabled: Mose AI will be silent.");
+            }
+        }
+
+        function speakResponse(text) {
+            if (isVoiceOutputEnabled && 'speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const chatBox = document.getElementById('chatBox');
+            const text = input.value.trim();
+            if (!text) return;
+
+            chatBox.innerHTML += `<div class="message user-msg">${text}</div>`;
+            input.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                const res = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text, thinkHarder: thinkHarderMode })
+                });
+                const data = await res.json();
+
+                chatBox.innerHTML += `<div class="message ai-msg">${data.reply}</div>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+                
+                speakResponse(data.reply);
+            } catch (err) {
+                chatBox.innerHTML += `<div class="message ai-msg" style="color:#ef4444;">Error connecting to Mose AI.</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
