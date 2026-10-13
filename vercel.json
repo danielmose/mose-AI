@@ -1,0 +1,20 @@
+﻿{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "jarvis-core": {
+      "root": "jarvis-core",
+      "framework": "express"
+    },
+    "jarvis-web": {
+      "root": "jarvis-web",
+      "framework": "vite",
+      "bindings": [
+        { "type": "service", "service": "jarvis-core", "format": "url", "env": "JARVIS_CORE_URL" }
+      ]
+    }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": { "service": "jarvis-core" } },
+    { "source": "/(.*)", "destination": { "service": "jarvis-web" } }
+  ]
+}
