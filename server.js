@@ -13,7 +13,9 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "public")));
+
+// Serve the React web app static files
+app.use(express.static(path.join(__dirname, "jarvis-project/jarvis-web/dist")));
 
 const upload = multer({ dest: "uploads/" });
 
@@ -50,6 +52,11 @@ app.post("/device-command", (req, res) => {
   const { command } = req.body;
   console.log(`Received device control command: ${command}`);
   res.json({ status: "success", executed: command });
+});
+
+// Fallback to React router for single-page app support
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "jarvis-project/jarvis-web/dist/index.html"));
 });
 
 const PORT = process.env.PORT || 3000;
